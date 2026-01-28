@@ -1,0 +1,230 @@
+{% extends "base.html" %}
+
+{% block title %}Environment Settings - Meat Sales{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-lg-8">
+        <div class="card shadow mb-4">
+            <div class="card-header bg-primary text-white">
+                <h4 class="mb-0"><i class="fas fa-cog"></i> Environment Settings</h4>
+            </div>
+            <div class="card-body">
+                <h5>{{ environment.name }}</h5>
+                <p class="text-muted">{{ environment.description or 'No description provided' }}</p>
+                
+                <div class="row mt-3">
+                    <div class="col-md-6">
+                        <p><strong>Created:</strong> {{ environment.created_at.strftime('%Y-%m-%d') }}</p>
+                        <p><strong>Admin:</strong> {{ environment.admin.username }}</p>
+                    </div>
+                    <div class="col-md-6">
+                        <p><strong>Total Users:</strong> {{ user_environments|length }}</p>
+                        <p><strong>Status:</strong> 
+                            <span class="badge bg-{{ 'success' if environment.is_active else 'danger' }}">
+                                {{ 'Active' if environment.is_active else 'Inactive' }}
+                            </span>
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-lg-4">
+        <div class="card shadow mb-4">
+            <div class="card-header bg-info text-white">
+                <h5 class="mb-0"><i class="fas fa-share-alt"></i> Invite Others</h5>
+            </div>
+            <div class="card-body text-center">
+                <h6>Invite Code</h6>
+                <div class="input-group mb-3">
+                    <input type="text" class="form-control text-center" value="{{ environment.invite_code }}" 
+                           id="inviteCode" readonly style="font-family: monospace; font-size: 1.2em;">
+                    <button class="btn btn-outline-secondary" type="button" onclick="copyInviteCode()">
+                        <i class="fas fa-copy"></i>
+                    </button>
+                </div>
+                
+                <h6>Direct Link</h6>
+                <div class="input-group mb-3">
+                    <input type="text" class="form-control" value="{{ request.host_url }}join/{{ environment.invite_code }}" 
+                           id="inviteUrl" readonly>
+                    <button class="btn btn-outline-secondary" type="button" onclick="copyInviteUrl()">
+                        <i class="fas fa-copy"></i>
+                    </button>
+                </div>
+                
+                <h6>Registration Link</h6>
+                <div class="input-group mb-3">
+                    <input type="text" class="form-control" value="{{ request.host_url }}register?invite_code={{ environment.invite_code }}" 
+                           id="registrationUrl" readonly>
+                    <button class="btn btn-outline-secondary" type="button" onclick="copyRegistrationUrl()">
+                        <i class="fas fa-copy"></i>
+                    </button>
+                </div>
+                <small class="text-muted mb-3 d-block">For people who don't have accounts yet</small>
+                
+                <h6>QR Code</h6>
+                <div class="mb-3">
+                    <img src="data:image/png;base64,{{ environment.get_qr_code() }}" 
+                         alt="QR Code" class="img-fluid" style="max-width: 200px;">
+                </div>
+                
+                <small class="text-muted">
+                    Share any of these with people you want to invite. They'll join as viewers initially.
+                </small>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Users Management -->
+<div class="card shadow">
+    <div class="card-header">
+        <h5 class="mb-0"><i class="fas fa-users"></i> Users in Environment</h5>
+    </div>
+    <div class="card-body p-0">
+        <div class="table-responsive">
+            <table class="table table-hover mb-0">
+                <thead class="table-dark">
+                    <tr>
+                        <th>User</th>
+                        <th>Role</th>
+                        <th>Joined</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for user_env, user in user_environments %}
+                    <tr>
+                        <td>
+                            <strong>{{ user.username }}</strong><br>
+                            <small class="text-muted">{{ user.email }}</small>
+                        </td>
+                        <td>
+                            <span class="badge bg-{{ 'danger' if user_env.role == 'admin' else 'warning' if user_env.role == 'maintainer' else 'info' }}">
+                                {{ user_env.role|title }}
+                            </span>
+                        </td>
+                        <td>{{ user_env.joined_at.strftime('%Y-%m-%d') }}</td>
+                        <td>
+                            {% if user_env.role != 'admin' %}
+                                <div class="btn-group btn-group-sm" role="group">
+                                    {% if user_env.role == 'viewer' %}
+                                        <button class="btn btn-outline-warning btn-sm" 
+                                                onclick="changeUserRole({{ user_env.id }}, 'maintainer')"
+                                                title="Promote to Maintainer">
+                                            <i class="fas fa-arrow-up"></i> Promote
+                                        </button>
+                                    {% elif user_env.role == 'maintainer' %}
+                                        <button class="btn btn-outline-info btn-sm" 
+                                                onclick="changeUserRole({{ user_env.id }}, 'viewer')"
+                                                title="Demote to Viewer">
+                                            <i class="fas fa-arrow-down"></i> Demote
+                                        </button>
+                                    {% endif %}
+                                    <button class="btn btn-outline-danger btn-sm" 
+                                            onclick="removeUser({{ user_env.id }}, '{{ user.username }}')"
+                                            title="Remove from Environment">
+                                        <i class="fas fa-user-times"></i> Remove
+                                    </button>
+                                </div>
+                            {% else %}
+                                <span class="text-muted">Environment Owner</span>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+function copyInviteCode() {
+    const codeInput = document.getElementById('inviteCode');
+    codeInput.select();
+    codeInput.setSelectionRange(0, 99999);
+    document.execCommand('copy');
+    
+    // Show feedback
+    const button = event.target.closest('button');
+    const originalHTML = button.innerHTML;
+    button.innerHTML = '<i class="fas fa-check"></i>';
+    button.classList.add('btn-success');
+    button.classList.remove('btn-outline-secondary');
+    
+    setTimeout(() => {
+        button.innerHTML = originalHTML;
+        button.classList.remove('btn-success');
+        button.classList.add('btn-outline-secondary');
+    }, 2000);
+}
+
+function copyRegistrationUrl() {
+    const urlInput = document.getElementById('registrationUrl');
+    urlInput.select();
+    urlInput.setSelectionRange(0, 99999);
+    document.execCommand('copy');
+    
+    // Show feedback
+    const button = event.target.closest('button');
+    const originalHTML = button.innerHTML;
+    button.innerHTML = '<i class="fas fa-check"></i>';
+    button.classList.add('btn-success');
+    button.classList.remove('btn-outline-secondary');
+    
+    setTimeout(() => {
+        button.innerHTML = originalHTML;
+        button.classList.remove('btn-success');
+        button.classList.add('btn-outline-secondary');
+    }, 2000);
+}
+
+function copyInviteUrl() {
+    const urlInput = document.getElementById('inviteUrl');
+    urlInput.select();
+    urlInput.setSelectionRange(0, 99999);
+    document.execCommand('copy');
+    
+    // Show feedback
+    const button = event.target.closest('button');
+    const originalHTML = button.innerHTML;
+    button.innerHTML = '<i class="fas fa-check"></i>';
+    button.classList.add('btn-success');
+    button.classList.remove('btn-outline-secondary');
+    
+    setTimeout(() => {
+        button.innerHTML = originalHTML;
+        button.classList.remove('btn-success');
+        button.classList.add('btn-outline-secondary');
+    }, 2000);
+}
+
+function changeUserRole(userEnvId, newRole) {
+    if (confirm(`Are you sure you want to change this user's role to ${newRole}?`)) {
+        // This would need a backend endpoint - for now just reload
+        alert('Role change functionality would be implemented here');
+        // fetch(`/change_user_role/${userEnvId}`, {
+        //     method: 'POST',
+        //     headers: {'Content-Type': 'application/json'},
+        //     body: JSON.stringify({role: newRole})
+        // }).then(() => location.reload());
+    }
+}
+
+function removeUser(userEnvId, username) {
+    if (confirm(`Are you sure you want to remove ${username} from this environment?`)) {
+        // This would need a backend endpoint - for now just reload
+        alert('Remove user functionality would be implemented here');
+        // fetch(`/remove_user_from_environment/${userEnvId}`, {
+        //     method: 'DELETE'
+        // }).then(() => location.reload());
+    }
+}
+</script>
+{% endblock %}

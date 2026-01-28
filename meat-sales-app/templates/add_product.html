@@ -1,0 +1,213 @@
+{% extends "base.html" %}
+
+{% block title %}Add Product - Meat Sales{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-lg-8">
+        <div class="card shadow">
+            <div class="card-header bg-primary text-white">
+                <h4 class="mb-0"><i class="fas fa-plus"></i> Add New Product</h4>
+                {% if environment %}
+                    <small>Environment: {{ environment.name }}</small>
+                {% endif %}
+            </div>
+            <div class="card-body">
+                <form method="POST" id="productForm">
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label for="name" class="form-label">Product Name *</label>
+                            <input type="text" class="form-control" id="name" name="name" 
+                                   placeholder="e.g., Premium Venison Sausage" required>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label for="type" class="form-label">Product Type *</label>
+                            <select class="form-select" id="type" name="type" required>
+                                <option value="">Select type...</option>
+                                <option value="sausage">Sausage</option>
+                                <option value="leg">Leg</option>
+                                <option value="back">Back</option>
+                                <option value="shoulder">Shoulder</option>
+                                <option value="ribs">Ribs</option>
+                                <option value="ground">Ground Meat</option>
+                                <option value="steak">Steak</option>
+                                <option value="roast">Roast</option>
+                                <option value="other">Other</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label for="animal_type" class="form-label">Animal Type *</label>
+                            <select class="form-select" id="animal_type" name="animal_type" required>
+                                <option value="">Select animal...</option>
+                                <option value="deer">Deer</option>
+                                <option value="wild_boar">Wild Boar</option>
+                                <option value="elk">Elk</option>
+                                <option value="moose">Moose</option>
+                                <option value="rabbit">Rabbit</option>
+                                <option value="duck">Duck</option>
+                                <option value="pheasant">Pheasant</option>
+                                <option value="turkey">Wild Turkey</option>
+                                <option value="other">Other</option>
+                            </select>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label for="price_input" class="form-label" id="price_label">Price per kg ($) *</label>
+                            <input type="number" step="0.01" class="form-control" id="price_input" 
+                                   name="price_per_kg" placeholder="e.g., 25.00" required 
+                                   onchange="calculateTotal()">
+                        </div>
+                    </div>
+
+                    <!-- Product Type Selection -->
+                    <div class="card border-info mb-3">
+                        <div class="card-header bg-light">
+                            <div class="form-check form-switch">
+                                <input class="form-check-input" type="checkbox" id="is_packaged" name="is_packaged" onchange="togglePackageFields()">
+                                <label class="form-check-label" for="is_packaged">
+                                    <strong>This product is pre-packaged into individual units</strong>
+                                </label>
+                            </div>
+                            <small class="text-muted">Check this if you have individual packages/portions (e.g., sausages, steaks)</small>
+                        </div>
+                    </div>
+
+                    <!-- Bulk Product Fields -->
+                    <div id="bulkFields">
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="total_weight_kg" class="form-label">Total Weight (kg) *</label>
+                                <input type="number" step="0.1" class="form-control" id="total_weight_kg" 
+                                       name="total_weight_kg" placeholder="e.g., 10.5" 
+                                       onchange="calculateTotal()">
+                                <div class="form-text">Total weight of the meat piece</div>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="total_price_bulk" class="form-label">Total Price ($)</label>
+                                <input type="number" step="0.01" class="form-control" id="total_price_bulk" 
+                                       readonly>
+                                <div class="form-text">Automatically calculated</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Packaged Product Fields -->
+                    <div id="packagedFields" style="display: none;">
+                        <div class="row">
+                            <div class="col-md-4 mb-3">
+                                <label for="total_packages" class="form-label">Number of Packages *</label>
+                                <input type="number" min="1" class="form-control" id="total_packages" 
+                                       name="total_packages" placeholder="e.g., 20" 
+                                       onchange="calculateTotal()">
+                                <div class="form-text">How many individual packages</div>
+                            </div>
+                            <div class="col-md-4 mb-3">
+                                <label for="package_size_kg" class="form-label">Package Size (kg) *</label>
+                                <input type="number" step="0.01" class="form-control" id="package_size_kg" 
+                                       name="package_size_kg" placeholder="e.g., 0.5" 
+                                       onchange="calculateTotal()">
+                                <div class="form-text">Weight per package</div>
+                            </div>
+                            <div class="col-md-4 mb-3">
+                                <label for="total_price_packaged" class="form-label">Total Price ($)</label>
+                                <input type="number" step="0.01" class="form-control" id="total_price_packaged" 
+                                       readonly>
+                                <div class="form-text">Automatically calculated</div>
+                            </div>
+                        </div>
+                        <div class="alert alert-info">
+                            <i class="fas fa-info-circle"></i>
+                            <strong>Package Summary:</strong> <span id="packageSummary">-</span>
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="notes" class="form-label">Notes</label>
+                        <textarea class="form-control" id="notes" name="notes" rows="3" 
+                                  placeholder="Additional information about the product..."></textarea>
+                    </div>
+
+                    <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                        <a href="{{ url_for('dashboard') }}" class="btn btn-secondary me-md-2">
+                            <i class="fas fa-times"></i> Cancel
+                        </a>
+                        <button type="submit" class="btn btn-success">
+                            <i class="fas fa-plus"></i> Add Product
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+function togglePackageFields() {
+    const isPackaged = document.getElementById('is_packaged').checked;
+    const bulkFields = document.getElementById('bulkFields');
+    const packagedFields = document.getElementById('packagedFields');
+    const priceLabel = document.getElementById('price_label');
+    const priceInput = document.getElementById('price_input');
+    
+    if (isPackaged) {
+        bulkFields.style.display = 'none';
+        packagedFields.style.display = 'block';
+        // Change price field to per-package
+        priceLabel.textContent = 'Price per Package ($) *';
+        priceInput.name = 'price_per_package';
+        priceInput.placeholder = 'e.g., 5.00';
+        // Clear bulk fields
+        document.getElementById('total_weight_kg').value = '';
+        document.getElementById('total_weight_kg').removeAttribute('required');
+        // Add required to packaged fields
+        document.getElementById('total_packages').setAttribute('required', 'required');
+        document.getElementById('package_size_kg').setAttribute('required', 'required');
+    } else {
+        bulkFields.style.display = 'block';
+        packagedFields.style.display = 'none';
+        // Change price field to per-kg
+        priceLabel.textContent = 'Price per kg ($) *';
+        priceInput.name = 'price_per_kg';
+        priceInput.placeholder = 'e.g., 25.00';
+        // Clear packaged fields
+        document.getElementById('total_packages').value = '';
+        document.getElementById('package_size_kg').value = '';
+        document.getElementById('total_packages').removeAttribute('required');
+        document.getElementById('package_size_kg').removeAttribute('required');
+        // Add required to bulk fields
+        document.getElementById('total_weight_kg').setAttribute('required', 'required');
+    }
+    calculateTotal();
+}
+
+function calculateTotal() {
+    const isPackaged = document.getElementById('is_packaged').checked;
+    
+    if (isPackaged) {
+        const totalPackages = parseInt(document.getElementById('total_packages').value) || 0;
+        const packageSize = parseFloat(document.getElementById('package_size_kg').value) || 0;
+        const pricePerPackage = parseFloat(document.getElementById('price_input').value) || 0;
+        const totalWeight = totalPackages * packageSize;
+        const totalPrice = totalPackages * pricePerPackage;
+        
+        document.getElementById('total_price_packaged').value = totalPrice.toFixed(2);
+        document.getElementById('packageSummary').textContent = 
+            `${totalPackages} packages × $${pricePerPackage.toFixed(2)} each = $${totalPrice.toFixed(2)} total (${totalWeight.toFixed(1)}kg)`;
+    } else {
+        const weight = parseFloat(document.getElementById('total_weight_kg').value) || 0;
+        const pricePerKg = parseFloat(document.getElementById('price_input').value) || 0;
+        const total = weight * pricePerKg;
+        document.getElementById('total_price_bulk').value = total.toFixed(2);
+    }
+}
+
+// Initialize on page load
+document.addEventListener('DOMContentLoaded', function() {
+    togglePackageFields();
+});
+</script>
+{% endblock %}

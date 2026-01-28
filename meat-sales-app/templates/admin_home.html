@@ -1,0 +1,105 @@
+{% extends "base.html" %}
+
+{% block title %}System Admin Home - Meat Sales{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-lg-8">
+        <div class="card shadow-lg">
+            <div class="card-header bg-danger text-white text-center">
+                <h3 class="mb-0"><i class="fas fa-user-shield"></i> System Administrator</h3>
+                <p class="mb-0">Welcome back, {{ current_user.username }}</p>
+            </div>
+            <div class="card-body">
+                <div class="row text-center">
+                    <div class="col-md-6 mb-4">
+                        <div class="card border-primary h-100">
+                            <div class="card-body d-flex flex-column">
+                                <div class="mb-3">
+                                    <i class="fas fa-cogs fa-4x text-primary"></i>
+                                </div>
+                                <h5 class="card-title">System Administration</h5>
+                                <p class="card-text flex-grow-1">
+                                    View all environments, manage system-wide settings, and monitor user activities across the platform.
+                                </p>
+                                <a href="{{ url_for('admin_dashboard') }}" class="btn btn-primary">
+                                    <i class="fas fa-arrow-right"></i> Go to Administration
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="col-md-6 mb-4">
+                        <div class="card border-secondary h-100">
+                            <div class="card-body d-flex flex-column">
+                                <div class="mb-3">
+                                    <i class="fas fa-user-cog fa-4x text-secondary"></i>
+                                </div>
+                                <h5 class="card-title">Profile Settings</h5>
+                                <p class="card-text flex-grow-1">
+                                    Update your personal information, change password, and manage your account preferences.
+                                </p>
+                                <a href="{{ url_for('user_profile') }}" class="btn btn-outline-secondary">
+                                    <i class="fas fa-user"></i> Manage Profile
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Quick Stats -->
+                <hr class="my-4">
+                <div class="row text-center">
+                    <div class="col">
+                        <h6 class="text-muted mb-3">System Overview</h6>
+                        <div class="d-flex justify-content-around">
+                            <div>
+                                <strong class="text-info">System Role</strong><br>
+                                <span class="badge bg-danger">Administrator</span>
+                            </div>
+                            <div>
+                                <strong class="text-info">Access Level</strong><br>
+                                <span class="badge bg-warning">Global</span>
+                            </div>
+                            <div>
+                                <strong class="text-info">Environment Access</strong><br>
+                                <span class="badge bg-secondary">Overview Only</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Quick Actions -->
+                <hr class="my-4">
+                <div class="text-center">
+                    <h6 class="text-muted mb-3">Quick Actions</h6>
+                    <div class="btn-group" role="group">
+                        <a href="{{ url_for('admin_dashboard') }}" class="btn btn-outline-primary btn-sm">
+                            <i class="fas fa-eye"></i> View All Environments
+                        </a>
+                        <a href="{{ url_for('user_profile') }}" class="btn btn-outline-secondary btn-sm">
+                            <i class="fas fa-key"></i> Change Password
+                        </a>
+                        <a href="{{ url_for('logout') }}" class="btn btn-outline-danger btn-sm">
+                            <i class="fas fa-sign-out-alt"></i> Logout
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Info Alert -->
+<div class="row mt-4">
+    <div class="col-12">
+        <div class="alert alert-info">
+            <h6><i class="fas fa-info-circle"></i> System Administrator Permissions</h6>
+            <p class="mb-0">
+                As a system administrator, you have oversight of all environments but cannot access individual environment content. 
+                You can view environment names, user assignments, and system-wide statistics, but cannot manage products or sales within environments.
+            </p>
+        </div>
+    </div>
+</div>
+{% endblock %}

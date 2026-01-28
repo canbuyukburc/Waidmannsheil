@@ -1,0 +1,50 @@
+{% extends "base.html" %}
+
+{% block title %}Create Environment - Meat Sales{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-lg-6">
+        <div class="card shadow">
+            <div class="card-header bg-success text-white">
+                <h4 class="mb-0"><i class="fas fa-plus-circle"></i> Create New Environment</h4>
+            </div>
+            <div class="card-body">
+                <p class="text-muted mb-4">
+                    Create your own workspace for managing meat sales. You'll be the admin and can invite others.
+                </p>
+                
+                <form method="POST">
+                    <div class="mb-3">
+                        <label for="name" class="form-label">Environment Name *</label>
+                        <input type="text" class="form-control" id="name" name="name" 
+                               placeholder="e.g., Hunter's Meat Shop" required>
+                        <div class="form-text">Choose a name that others will recognize</div>
+                    </div>
+                    
+                    <div class="mb-4">
+                        <label for="description" class="form-label">Description</label>
+                        <textarea class="form-control" id="description" name="description" rows="3" 
+                                  placeholder="Brief description of your meat sales business..."></textarea>
+                        <div class="form-text">Optional: Help others understand what this environment is for</div>
+                    </div>
+                    
+                    <div class="alert alert-info">
+                        <i class="fas fa-info-circle"></i>
+                        <strong>As Admin:</strong> You'll be able to add products, manage sales, and invite others as maintainers or viewers.
+                    </div>
+                    
+                    <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                        <a href="{{ url_for('select_environment') }}" class="btn btn-secondary me-md-2">
+                            <i class="fas fa-arrow-left"></i> Back
+                        </a>
+                        <button type="submit" class="btn btn-success">
+                            <i class="fas fa-plus-circle"></i> Create Environment
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

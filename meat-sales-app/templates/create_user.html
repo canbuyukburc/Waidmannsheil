@@ -1,0 +1,133 @@
+{% extends "base.html" %}
+
+{% block title %}Create User - System Admin{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-lg-8">
+        <div class="card shadow">
+            <div class="card-header bg-success text-white">
+                <h4 class="mb-0"><i class="fas fa-user-plus"></i> Create New User</h4>
+                <small>System Administrator Function</small>
+            </div>
+            <div class="card-body">
+                <form method="POST">
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label for="username" class="form-label">Username *</label>
+                            <input type="text" class="form-control" id="username" name="username" 
+                                   placeholder="Enter username" required>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label for="email" class="form-label">Email</label>
+                            <input type="email" class="form-control" id="email" name="email" 
+                                   placeholder="user@example.com">
+                            <div class="form-text">Optional but recommended</div>
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label for="password" class="form-label">Password *</label>
+                            <input type="password" class="form-control" id="password" name="password" 
+                                   minlength="6" placeholder="Minimum 6 characters" required>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label for="confirm_password" class="form-label">Confirm Password *</label>
+                            <input type="password" class="form-control" id="confirm_password" 
+                                   minlength="6" placeholder="Re-enter password" required>
+                        </div>
+                    </div>
+
+                    <hr>
+
+                    <h5>Environment Assignment</h5>
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label for="environment_id" class="form-label">Assign to Environment</label>
+                            <select class="form-select" id="environment_id" name="environment_id">
+                                <option value="">No environment (user can join later)</option>
+                                {% for env in environments %}
+                                    <option value="{{ env.id }}">{{ env.name }}</option>
+                                {% endfor %}
+                            </select>
+                            <div class="form-text">Optional: User can join environments later using invite codes</div>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label for="role" class="form-label">Role in Environment</label>
+                            <select class="form-select" id="role" name="role">
+                                <option value="viewer">Viewer (Read-only)</option>
+                                <option value="maintainer">Maintainer (Can manage products)</option>
+                                <option value="envadm">Environment Admin (Full control)</option>
+                            </select>
+                            <div class="form-text">Only applies if environment is selected</div>
+                        </div>
+                    </div>
+
+                    <!-- Role Explanation -->
+                    <div class="alert alert-info">
+                        <h6><i class="fas fa-info-circle"></i> Role Permissions:</h6>
+                        <ul class="mb-0">
+                            <li><strong>Environment Admin:</strong> Full environment control + user management</li>
+                            <li><strong>Maintainer:</strong> Can add, sell, and remove products</li>
+                            <li><strong>Viewer:</strong> Can only view products, prices, and availability</li>
+                        </ul>
+                    </div>
+
+                    <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                        <a href="{{ url_for('admin_dashboard') }}" class="btn btn-secondary me-md-2">
+                            <i class="fas fa-times"></i> Cancel
+                        </a>
+                        <button type="submit" class="btn btn-success">
+                            <i class="fas fa-user-plus"></i> Create User
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+// Form validation
+document.querySelector('form').addEventListener('submit', function(e) {
+    const password = document.getElementById('password').value;
+    const confirmPassword = document.getElementById('confirm_password').value;
+    
+    if (password !== confirmPassword) {
+        e.preventDefault();
+        alert('Passwords do not match!');
+        return false;
+    }
+    
+    if (password.length < 6) {
+        e.preventDefault();
+        alert('Password must be at least 6 characters long!');
+        return false;
+    }
+});
+
+// Toggle role field based on environment selection
+document.getElementById('environment_id').addEventListener('change', function() {
+    const roleField = document.getElementById('role');
+    const hasEnvironment = this.value !== '';
+    
+    roleField.disabled = !hasEnvironment;
+    if (!hasEnvironment) {
+        roleField.value = 'viewer';
+    }
+});
+
+// Initialize on load
+document.addEventListener('DOMContentLoaded', function() {
+    const envSelect = document.getElementById('environment_id');
+    const roleSelect = document.getElementById('role');
+    
+    if (envSelect.value === '') {
+        roleSelect.disabled = true;
+    }
+});
+</script>
+{% endblock %}

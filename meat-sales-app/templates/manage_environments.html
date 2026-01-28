@@ -1,0 +1,82 @@
+{% extends "base.html" %}
+
+{% block title %}Manage Environments{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h2><i class="fas fa-building"></i> Manage Environments</h2>
+                <a href="{{ url_for('create_environment') }}" class="btn btn-primary">
+                    <i class="fas fa-plus"></i> Create New Environment
+                </a>
+            </div>
+
+            {% with messages = get_flashed_messages(with_categories=true) %}
+                {% if messages %}
+                    {% for category, message in messages %}
+                        <div class="alert alert-{{ 'danger' if category == 'error' else 'success' }} alert-dismissible fade show" role="alert">
+                            {{ message }}
+                            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                        </div>
+                    {% endfor %}
+                {% endif %}
+            {% endwith %}
+
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">All Environments</h5>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-striped">
+                            <thead>
+                                <tr>
+                                    <th>ID</th>
+                                    <th>Name</th>
+                                    <th>Description</th>
+                                    <th>Created Date</th>
+                                    <th>Users</th>
+                                    <th>Products</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for env in environments %}
+                                <tr>
+                                    <td>{{ env.id }}</td>
+                                    <td><strong>{{ env.name }}</strong></td>
+                                    <td>{{ env.description or '-' }}</td>
+                                    <td>{{ env.created_at.strftime('%Y-%m-%d') }}</td>
+                                    <td>
+                                        {% for user_env in env.users %}
+                                            <div class="d-flex justify-content-between align-items-center mb-1">
+                                                <span class="badge bg-primary">{{ user_env.user.username }}</span>
+                                                <small class="text-muted ms-2">{{ user_env.role }}</small>
+                                            </div>
+                                        {% else %}
+                                            <em>No users assigned</em>
+                                        {% endfor %}
+                                    </td>
+                                    <td>
+                                        <span class="badge bg-info">{{ env.products | length }} products</span>
+                                    </td>
+                                    <td>
+                                        <form method="POST" action="{{ url_for('delete_environment', env_id=env.id) }}" class="d-inline" onsubmit="return confirm('Are you sure you want to delete environment {{ env.name }}? This will delete ALL products, sales, and user assignments. This action cannot be undone.')">
+                                            <button type="submit" class="btn btn-sm btn-danger">
+                                                <i class="fas fa-trash"></i> Delete
+                                            </button>
+                                        </form>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
