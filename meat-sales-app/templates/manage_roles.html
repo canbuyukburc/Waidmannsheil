@@ -52,7 +52,7 @@
                             <thead>
                                 <tr>
                                     <th>User</th>
-                                    <th>Current Role</th>
+                                    <th>Role</th>
                                     <th>Joined</th>
                                     <th>Actions</th>
                                 </tr>
@@ -74,24 +74,36 @@
                                             </div>
                                         </td>
                                         <td>
-                                            {% if user_env.role == 'envadm' %}
-                                                <span class="badge bg-danger fs-6">Environment Admin</span>
-                                            {% elif user_env.role == 'maintainer' %}
-                                                <span class="badge bg-primary fs-6">Maintainer</span>
+                                            {% if user.id == current_user.id %}
+                                                <!-- Current user cannot change their own role -->
+                                                {% if user_env.role == 'envadm' %}
+                                                    <span class="badge bg-danger fs-6">Environment Admin</span>
+                                                {% elif user_env.role == 'maintainer' %}
+                                                    <span class="badge bg-primary fs-6">Maintainer</span>
+                                                {% else %}
+                                                    <span class="badge bg-secondary fs-6">Viewer</span>
+                                                {% endif %}
                                             {% else %}
-                                                <span class="badge bg-secondary fs-6">Viewer</span>
+                                                <!-- Dropdown for changing other users' roles -->
+                                                <form method="POST" class="d-inline">
+                                                    <input type="hidden" name="user_id" value="{{ user.id }}">
+                                                    <select class="form-select form-select-sm" name="new_role" onchange="this.form.submit()" style="width: auto;">
+                                                        <option value="envadm" {{ 'selected' if user_env.role == 'envadm' else '' }}>Environment Admin</option>
+                                                        <option value="maintainer" {{ 'selected' if user_env.role == 'maintainer' else '' }}>Maintainer</option>
+                                                        <option value="viewer" {{ 'selected' if user_env.role == 'viewer' else '' }}>Viewer</option>
+                                                    </select>
+                                                </form>
                                             {% endif %}
                                         </td>
                                         <td>
                                             {{ user_env.joined_at.strftime('%Y-%m-%d') if user_env.joined_at else 'Unknown' }}
                                         </td>
                                         <td>
-                                            <button type="button" class="btn btn-sm btn-outline-primary" 
-                                                    data-bs-toggle="modal" 
-                                                    data-bs-target="#changeRoleModal"
-                                                    onclick="setupRoleChange({{ user.id }}, '{{ user.username }}', '{{ user_env.role }}')">
-                                                <i class="fas fa-edit"></i> Change Role
-                                            </button>
+                                            {% if user.id != current_user.id %}
+                                                <span class="text-muted small">Select role above</span>
+                                            {% else %}
+                                                <span class="text-muted small">Your role</span>
+                                            {% endif %}
                                         </td>
                                     </tr>
                                 {% endfor %}
@@ -120,66 +132,4 @@
         </div>
     </div>
 </div>
-
-<!-- Change Role Modal -->
-<div class="modal fade" id="changeRoleModal" tabindex="-1">
-    <div class="modal-dialog">
-        <div class="modal-content">
-            <form method="POST">
-                <div class="modal-header">
-                    <h5 class="modal-title">Change User Role</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-                </div>
-                <div class="modal-body">
-                    <div class="mb-3">
-                        <label class="form-label">User</label>
-                        <input type="text" id="modalUsername" class="form-control" readonly>
-                        <input type="hidden" id="modalUserId" name="user_id">
-                    </div>
-                    <div class="mb-3">
-                        <label class="form-label">Current Role</label>
-                        <input type="text" id="modalCurrentRole" class="form-control" readonly>
-                    </div>
-                    <div class="mb-3">
-                        <label for="new_role" class="form-label">New Role</label>
-                        <select class="form-select" name="new_role" id="new_role" required>
-                            <option value="">Select new role...</option>
-                            <option value="envadm">Environment Admin</option>
-                            <option value="maintainer">Maintainer</option>
-                            <option value="viewer">Viewer</option>
-                        </select>
-                    </div>
-                    <div class="alert alert-warning">
-                        <i class="fas fa-exclamation-triangle"></i>
-                        <strong>Warning:</strong> Changing roles will immediately affect the user's permissions in this environment.
-                    </div>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                    <button type="submit" class="btn btn-primary">Change Role</button>
-                </div>
-            </form>
-        </div>
-    </div>
-</div>
-{% endblock %}
-
-{% block scripts %}
-<script>
-function setupRoleChange(userId, username, currentRole) {
-    document.getElementById('modalUserId').value = userId;
-    document.getElementById('modalUsername').value = username;
-    
-    // Display friendly role name
-    const roleName = {
-        'envadm': 'Environment Admin',
-        'maintainer': 'Maintainer', 
-        'viewer': 'Viewer'
-    };
-    document.getElementById('modalCurrentRole').value = roleName[currentRole] || currentRole;
-    
-    // Reset select
-    document.getElementById('new_role').value = '';
-}
-</script>
 {% endblock %}
